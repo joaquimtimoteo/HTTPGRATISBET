@@ -1,8 +1,14 @@
 # app
 
-A new Flutter project.
+# A new Flutter project using the v2ray server.
 
+Getting Started
+
+This project is a starting point for a Flutter application that leverages the v2ray server for HTTP requests. 
 ## Getting Started
+
+Author
+Joaquim Timoteo
 
 This project is a starting point for a Flutter application.
 
