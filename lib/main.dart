@@ -1,125 +1,212 @@
+import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
 void main() {
-  runApp(const MyApp());
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
+      home: Scaffold(
+        appBar: AppBar(
+          title: Text('Teste de Roteamento'),
+        ),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              ElevatedButton(
+                onPressed: () => testRouting(context, 'http://facebook.com'),
+                child: Text('Testar Facebook'),
+              ),
+              ElevatedButton(
+                onPressed: () => testRouting(context, 'http://youtube.com'),
+                child: Text('Testar YouTube'),
+              ),
+              ElevatedButton(
+                onPressed: () => testRouting(context, 'http://google.com'),
+                child: Text('Testar Google'),
+              ),
+            ],
+          ),
+        ),
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
     );
   }
-}
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
-    return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
+  Future<void> testRouting(BuildContext context, String url) async {
+    try {
+      final response = await http.get(Uri.parse(url));
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text('Teste de Roteamento'),
+          content: Text(
+            'Status Code: ${response.statusCode}\n'
+            'Body: ${response.body.substring(0, 100)}...',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('Fechar'),
             ),
           ],
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
-    );
+      );
+
+      final config = {
+        "log": {
+          "access": "/var/log/v2ray/access.log",
+          "error": "/var/log/v2ray/error.log",
+          "loglevel": "warning"
+        },
+        "inbounds": [
+          {
+            "port": 1080,
+            "protocol": "http",
+            "settings": {
+              "accounts": [
+                {"user": "joaquimtimoteo", "pass": "Carlinhos12!"}
+              ],
+              "timeout": 600
+            },
+            "streamSettings": {
+              "network": "tcp",
+              "security": "none",
+              "tcpSettings": {
+                "header": {
+                  "type": "http",
+                  "request": {
+                    "version": "1.1",
+                    "method": "GET",
+                    "path": ["/"],
+                    "headers": {
+                      "Host": ["facebook.com", "youtube.com", "google.com"]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "port": 1010,
+            "protocol": "socks",
+            "settings": {"auth": "noauth", "udp": false, "timeout": 600}
+          },
+          {
+            "port": 1110,
+            "protocol": "http",
+            "settings": {"timeout": 600}
+          }
+        ],
+        "outbounds": [
+          {
+            "protocol": "vmess",
+            "settings": {
+              "vnext": [
+                {
+                  "address": "20.42.93.21",
+                  "port": 443,
+                  "users": [
+                    {"id": "a04be4ef-1797-4ca9-a549-4385ce42494c", "alterId": 0}
+                  ]
+                }
+              ]
+            },
+            "tag": "vmess-outbound"
+          },
+          {
+            "protocol": "socks",
+            "settings": {
+              "servers": [
+                {"address": "127.0.0.1", "port": 1010, "users": []}
+              ]
+            },
+            "tag": "socks-outbound"
+          },
+          {
+            "protocol": "http",
+            "settings": {
+              "servers": [
+                {"address": "127.0.0.1", "port": 1110, "users": []}
+              ]
+            },
+            "tag": "http-outbound"
+          }
+        ],
+        "routing": {
+          "rules": [
+            {
+              "type": "field",
+              "outboundTag": "direct",
+              "domain": ["facebook.com", "youtube.com", "google.com"]
+            },
+            {
+              "type": "field",
+              "outboundTag": "vmess-outbound",
+              "protocol": ["vmess"]
+            },
+            {
+              "type": "field",
+              "outboundTag": "socks-outbound",
+              "protocol": ["socks"]
+            },
+            {
+              "type": "field",
+              "outboundTag": "http-outbound",
+              "protocol": ["http"]
+            }
+          ],
+          "settings": {
+            "rules": [
+              {
+                "domainStrategy": "AsIs",
+                "balancer": [
+                  {
+                    "tag": "balancer",
+                    "selector": [
+                      "vmess-outbound",
+                      "socks-outbound",
+                      "http-outbound"
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      };
+
+      final socket =
+          await Socket.connect('20.42.93.21', 1010); // Porta do protocolo SOCKS
+      final encoder = JsonEncoder();
+      final configJson = encoder.convert(config);
+
+      socket.write(configJson);
+
+      socket.listen((List<int> data) {
+        print('Received: ${String.fromCharCodes(data)}');
+      });
+
+      socket.close();
+    } catch (e) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text('Teste de Roteamento'),
+          content: Text('Erro: $e'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('Fechar'),
+            ),
+          ],
+        ),
+      );
+    }
   }
 }
